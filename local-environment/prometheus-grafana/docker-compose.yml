@@ -1,0 +1,25 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:9.0.0
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3001:3000"
+
+  skynet-app:
+    container_name: skynet-app
+    build:
+      context: ./../../skynet-app
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+
