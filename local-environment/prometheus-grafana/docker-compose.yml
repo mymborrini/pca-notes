@@ -11,7 +11,13 @@ services:
     image: grafana/grafana:9.0.0
     container_name: grafana
     environment:
+      # Username: admin, Password: admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH="/var/lib/grafana/dashboards/"
+    volumes:
+      - ./grafana-config/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./grafana-config/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
+      - ./grafana-config/dashboard.json:/var/lib/grafana/dashboards/prometheus-stats/dashboard.json
     ports:
       - "3001:3000"
 

@@ -1,6 +1,6 @@
 # Prometheus & Grafana: Docker compose monitoring tutorial
 
-We are going to expose a Flask application that contains different kind of metrics
+We are going to expose a FastApi application that contains different kind of metrics
 - Counter
 - Gauge
 - Histogram
