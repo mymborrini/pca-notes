@@ -29,3 +29,26 @@ services:
     ports:
       - "8000:8000"
 
+  lf-app-1:
+    container_name: lf-app-1
+    build:
+      context: ./../../lf-app/demo-service-source
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8080"
+
+  lf-app-2:
+    container_name: lf-app-2
+    build:
+      context: ./../../lf-app/demo-service-source
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8080"
+
+  lf-app-3:
+    container_name: lf-app-3
+    build:
+      context: ./../../lf-app/demo-service-source
+      dockerfile: Dockerfile
+    ports:
+      - "8004:8080"

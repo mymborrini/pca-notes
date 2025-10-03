@@ -15,3 +15,8 @@ scrape_configs:
         regex: (.*)
         target_label: __name__
         replacement: "skynet_$1"
+
+  - job_name: 'lf-app'
+    static_configs:
+      - targets: ['lf-app-1:8080', 'lf-app-2:8080', 'lf-app-3:8080']
+
