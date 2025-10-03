@@ -1,0 +1,31 @@
+# Skynet API Metrics App
+
+###
+# @name Root
+GET http://localhost:8000/
+
+###
+# @name Create Item
+POST http://localhost:8000/items
+Content-Type: application/json
+
+{
+  "name": "Test Item"
+}
+
+###
+# @name Get Item
+GET http://localhost:8000/items/1
+
+###
+# @name Update Item
+PUT http://localhost:8000/items/1
+Content-Type: application/json
+
+{
+  "name": "Updated Item"
+}
+
+###
+# @name Delete Item
+DELETE http://localhost:8000/items/1
