@@ -4,4 +4,3 @@
 **/*.iml
 
 **/lf-app/*
-!**/lf-app/.keep
