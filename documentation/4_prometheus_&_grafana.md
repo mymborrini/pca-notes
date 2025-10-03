@@ -13,5 +13,6 @@ Is a good idea to first create a query in prometheus using promql and then movin
 
 To have the lf-app for this example do the following:
 
+    rm lf-app
     git clone --depth=1 https://github.com/lftraining/LFS241.git
     mv LFS241 lf-app
