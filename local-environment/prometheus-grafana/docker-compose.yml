@@ -18,6 +18,7 @@ services:
       - ./grafana-config/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./grafana-config/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
       - ./grafana-config/dashboard.json:/var/lib/grafana/dashboards/prometheus-stats/dashboard.json
+      - ./grafana-config/demo-service-dashboard.json:/var/lib/grafana/dashboards/prometheus-stats/demo-service-dashboard.json
     ports:
       - "3001:3000"
 
