@@ -16,6 +16,60 @@ to retrieve statistics (the details vary by operating system).
 The Node exporter has a variety of collector modules that can be configured or turned off and on via flags. However by default, it will
 start up with a reasonable configuration without providing any flags. 
 
+
+## 🧩 Node Exporter — How It Works and How to Install It
+
+### 🧠 What Is Node Exporter
+
+*Node Exporter* is a lightweight agent developed by Prometheus that runs on each host (VM, bare metal, or container).
+It collects *system-level metrics* — CPU, memory, disk, network, and file system — and exposes them in Prometheus format at:
+
+    http://<host>:9100/metrics
+
+Prometheus scrapes this endpoint periodically to store time series data.
+
+### ⚙️ How It Works at OS Level
+
+Node Exporter does not hook into the kernel or require any driver.
+It simply reads from existing Linux kernel interfaces such as:
+
+
+| Subsystem      | Source Files / APIs               | Example Metrics                            |
+| -------------- | --------------------------------- | ------------------------------------------ |
+| **CPU**        | `/proc/stat`                      | `node_cpu_seconds_total`                   |
+| **Memory**     | `/proc/meminfo`                   | `node_memory_MemAvailable_bytes`           |
+| **Disk I/O**   | `/proc/diskstats`, `/sys/block/*` | `node_disk_io_time_seconds_total`          |
+| **Filesystem** | `statvfs()` syscalls              | `node_filesystem_avail_bytes`              |
+| **Network**    | `/proc/net/dev`                   | `node_network_receive_bytes_total`         |
+| **Processes**  | `/proc/[pid]/`                    | `node_procs_running`, `node_procs_blocked` |
+
+Essentially, Node Exporter acts as a read-only adapter between the Linux kernel and Prometheus.
+
+---
+
+### 🏗️ Installation Options 🐳 As a Docker Container
+
+    docker run -d \
+    --name node-exporter \
+    --net="host" \
+    --pid="host" \
+    -v "/:/host:ro" \
+    prom/node-exporter:v1.9.1 \
+    --path.rootfs=/host
+
+### 🧠 Summary
+
+| Concept         | Description                                        |
+| --------------- | -------------------------------------------------- |
+| **Purpose**     | Expose hardware and OS metrics for Prometheus      |
+| **Runs on**     | Each host (bare metal, VM, or container)           |
+| **Data Source** | Linux kernel pseudo-files under `/proc` and `/sys` |
+| **Port**        | Default: `9100`                                    |
+| **Security**    | Read-only access; no kernel modifications          |
+| **Scraped by**  | Prometheus server                                  |
+
+
+
 ## Some useful Node Exporter metrics
 
 The metric node_cpu_seconds_total tracks how many CPU seconds have been used since boot time per core (cpu label) and per mode (mode label). 
