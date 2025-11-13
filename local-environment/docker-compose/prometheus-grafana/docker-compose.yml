@@ -34,7 +34,7 @@ services:
   lf-app-1:
     container_name: lf-app-1
     build:
-      context: ./../../lf-app/demo-service-source
+      context: ./../../../lf-app/demo-service-source
       dockerfile: Dockerfile
     ports:
       - "8002:8080"
@@ -42,7 +42,7 @@ services:
   lf-app-2:
     container_name: lf-app-2
     build:
-      context: ./../../lf-app/demo-service-source
+      context: ./../../../lf-app/demo-service-source
       dockerfile: Dockerfile
     ports:
       - "8003:8080"
@@ -50,10 +50,26 @@ services:
   lf-app-3:
     container_name: lf-app-3
     build:
-      context: ./../../lf-app/demo-service-source
+      context: ./../../../lf-app/demo-service-source
       dockerfile: Dockerfile
     ports:
       - "8004:8080"
+  
+  lf-app-instrumented-go:
+    container_name: lf-app-instrumented-go
+    build:
+      context: ./../../../lf-app/instrumentation-exercise/go
+      dockerfile: Dockerfile
+    ports:
+     - "8005:12345"
+
+  lf-app-instrumented-python:
+    container_name: lf-app-instrumented-python
+    build:
+      context: ./../../../lf-app/instrumentation-exercise/python
+      dockerfile: Dockerfile
+    ports:
+     - "8006:12345"
 
   node-exporter:
     image: docker.io/prom/node-exporter:v1.9.1
@@ -64,7 +80,7 @@ services:
     volumes:
       - /:/host:ro # rslave you can add rslave if you want to see volume mounts after the container started. Probably because of wsl this can cause some issue on my personal laptop
     ports:
-      - "8005:9100"
+      - "8015:9100"
   
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.52.1
@@ -72,7 +88,7 @@ services:
     hostname: cadvisor
     restart: unless-stopped
     ports:
-      - "8006:8080"
+      - "8016:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
