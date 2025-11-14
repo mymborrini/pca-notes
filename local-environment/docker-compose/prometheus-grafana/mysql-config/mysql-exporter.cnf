@@ -1,0 +1,4 @@
+[client]
+user = exporter
+password = prom123
+host = mysql

@@ -70,6 +70,29 @@ services:
       dockerfile: Dockerfile
     ports:
      - "8006:12345"
+  
+  mysql:
+    image: mysql:8.0-bookworm
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=psw123
+    volumes:
+     - ./mysql-config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+    - "8007:3306"
+
+  mysql-exporter:
+    image: prom/mysqld-exporter:v0.18.0
+    container_name: mysql-exporter
+    command:
+      - --config.my-cnf=/cfg/config.my-cnf
+    ports:
+      - "8008:9104"
+    volumes:
+      - ./mysql-config/mysql-exporter.cnf:/cfg/config.my-cnf
+
+    
+
 
   node-exporter:
     image: docker.io/prom/node-exporter:v1.9.1
