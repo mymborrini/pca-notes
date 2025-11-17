@@ -15,3 +15,4 @@ Sometimes, an exporter might have to perform expensive actions to gather metrics
 To benefit from Prometheus's fine-granular pull model, its service discovery, and the labeled metadata that it attaches to every scrape target, avoid "super" exporters that monitor multiple processes or services at once. Instead, a good rule of thumb is to run one exporter process (i.e. one pull target) for every monitored third-party process.
 
 When you cannot instrument a software component directly and there is also no existing exporter for it, you may want to write your own exporter. In the best case, writing an exporter is simple, since it only requires translating existing metrics into the Prometheus metrics format. Doing a clean translation does require some understanding of the metrics in question though.
+

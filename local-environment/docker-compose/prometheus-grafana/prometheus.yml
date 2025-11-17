@@ -49,3 +49,20 @@ scrape_configs:
           # The mysqld_exporter host:port
         replacement: mysql-exporter:9104
 
+  - job_name: 'postgres'
+    
+    static_configs:
+      - targets:
+        - psql:5432
+
+    metrics_path: /probe
+    params:
+      auth_module: [client]
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: psql-exporter:9187 
