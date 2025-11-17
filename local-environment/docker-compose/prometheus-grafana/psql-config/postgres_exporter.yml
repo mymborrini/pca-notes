@@ -2,8 +2,9 @@ auth_modules:
   client:
     type: userpass
     userpass:
-      username: postgres
-      password: psw123
+      username: postgres_exporter
+      password: prom123
     options:
       # options become key=value parameters of the DSN
       sslmode: disable
+      database: postgres

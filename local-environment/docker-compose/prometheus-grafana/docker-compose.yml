@@ -111,6 +111,8 @@ services:
       - "8009:5432"
     environment:
       POSTGRES_PASSWORD: psw123
+    volumes:
+      - ./psql-config/init.sql:/docker-entrypoint-initdb.d/init.sql
     profiles: ["db", "psql"]
   
   psql-exporter:
