@@ -20,6 +20,15 @@ DROP FUNCTION __tmp_create_user();
 
 ALTER USER postgres_exporter WITH PASSWORD 'prom123';
 ALTER USER postgres_exporter SET SEARCH_PATH TO postgres_exporter,pg_catalog;
+-- THere is another way if you don't want to use postgres_exporter as a superuser
+-- You can tell the exporter to not run all the queries using this parameter here
+-- create a file named 
+-- psql-config/queries.yaml:
+--    | disable_default_metrics: true
+-- mount it:
+--    | - ./psql-config/queries.yaml:/cfg/queries.yaml
+-- And modify the command to:
+--    | --config.file=/cnf/postgres_exporter.yml --extend.query-path=/cfg/queries.yaml
 ALTER USER postgres_exporter WITH SUPERUSER;
 
 -- If deploying as non-superuser (for example in AWS RDS), uncomment the GRANT
