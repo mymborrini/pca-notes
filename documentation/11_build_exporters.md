@@ -16,3 +16,19 @@ To benefit from Prometheus's fine-granular pull model, its service discovery, an
 
 When you cannot instrument a software component directly and there is also no existing exporter for it, you may want to write your own exporter. In the best case, writing an exporter is simple, since it only requires translating existing metrics into the Prometheus metrics format. Doing a clean translation does require some understanding of the metrics in question though.
 
+## cpu-exporter project
+
+In this project, you will study and run a simple example exporter written in Python that exposes CPU metrics about the Linux machine it is running on. These metrics will be roughly equivalent to the CPU usage metrics of the Node Exporter, although they only split up CPU usage by mode, not additionally by CPU core. To retrieve the host's CPU metrics, the exporter uses the psutil Python library so that it does not need to parse the underlying virtual file (/proc/stat) on its own.
+
+The Prometheus client library's HTTP server is started on port 8000 by calling start_http_server(8000). The HTTP server calls the collect() method of the CPUCollector class once per scrape, fetches the current CPU usage stats using the psutil library, and uses a CounterMetricFamily to translate those values into a "throw-away" Prometheus metric family (a group of series with the same metric name, but different labels) that is split out by the mode label dimension
+
+
+You can now query CPU usage from your own exporter instead of using the Prometheus Node Exporter:
+    
+    rate(cpu_exporter_cpu_usage_seconds_total{job="cpu-exporter"}[1m])
+
+Compare this with the equivalent expression based on the Node Exporter’s CPU metrics:
+
+    sum without(cpu) (rate(node_cpu_seconds_total{job="node"}[1m]))
+    
+The CPU usage should look identical

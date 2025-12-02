@@ -132,6 +132,14 @@ services:
      - --config.file=/cnf/postgres_exporter.yml
     profiles: ["db", "psql"]
     
+  cpu-exporter:
+    container_name: cpu-exporter
+    build:
+      context: ./../../../cpu-exporter/
+      dockerfile: Dockerfile
+    ports:
+      - "8011:8000"
+    profiles: ["exporter"]
     
 
   node-exporter:
