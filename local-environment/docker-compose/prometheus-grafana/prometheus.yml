@@ -19,6 +19,10 @@ scrape_configs:
   - job_name: 'lf-app'
     static_configs:
       - targets: ['lf-app-1:8080', 'lf-app-2:8080', 'lf-app-3:8080']
+    metric_relabel_configs:
+      - action: keep
+        source_labels: [__name__]
+        regex: '(demo_|http_).*'
 
   - job_name: 'lf-app-instrumented'
     static_configs:
