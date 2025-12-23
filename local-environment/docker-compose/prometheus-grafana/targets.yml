@@ -1,0 +1,9 @@
+- targets:
+    - 'lf-app-1:8080'
+    - 'lf-app-2:8080'
+  labels:
+    env: production
+- targets:
+    - 'lf-app-3:8080'
+  labels:
+    env: staging

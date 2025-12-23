@@ -74,3 +74,16 @@ scrape_configs:
   - job_name: 'cpu-exporter'
     static_configs:
       - targets: ['cpu-exporter:8000']
+  
+  - job_name: 'consul-sd-lfapp'
+    consul_sd_configs:
+      - server: 'consul:8500'
+    relabel_configs:
+      - action: keep
+        source_labels: [__meta_consul_service]
+        regex: lf-app
+
+  - job_name: 'file-sd-config'
+    file_sd_configs:
+      - files:
+        - 'targets.yml'

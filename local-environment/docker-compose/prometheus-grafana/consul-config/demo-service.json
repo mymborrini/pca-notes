@@ -1,0 +1,22 @@
+{
+    "services": [
+        {
+            "id": "lf-app-1",
+            "name": "lf-app",
+            "address": "lf-app-1",
+            "port": 8080
+        },
+                {
+            "id": "lf-app-2",
+            "name": "lf-app",
+            "address": "lf-app-2",
+            "port": 8080
+        },
+                {
+            "id": "lf-app-3",
+            "name": "lf-app",
+            "address": "lf-app-3",
+            "port": 8080
+        }
+    ]
+}

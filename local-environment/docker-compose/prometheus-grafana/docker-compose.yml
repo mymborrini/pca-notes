@@ -4,6 +4,7 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./targets.yml:/etc/prometheus/targets.yml
     ports:
       - "9090:9090"
     profiles: ["obs"]
@@ -168,3 +169,15 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro 
     profiles: ["system"]
+
+  consul:
+    image: docker.io/hashicorp/consul:1.20
+    container_name: consul
+    volumes:
+      - ./consul-config/demo-service.json:/etc/consul/demo-service.json
+    command: agent -bind=0.0.0.0 -client=0.0.0.0 -dev -config-file=/etc/consul/demo-service.json
+    ports:
+      - "8012:8500"  # UI & API
+      - "8013:8600"  # DNS (optional)
+    restart: unless-stopped
+    profiles: ["consul"]
