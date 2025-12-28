@@ -2,62 +2,64 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
 
-  - job_name: 'skynet-app'
+  - job_name: "skynet-app"
     static_configs:
-      - targets: ['skynet-app:8000']
-    metrics_path: '/metrics'
+      - targets: ["skynet-app:8000"]
+    metrics_path: "/metrics"
     metric_relabel_configs:
       - source_labels: [__name__]
         regex: (.*)
         target_label: __name__
         replacement: "skynet_$1"
 
-  - job_name: 'lf-app'
+  - job_name: "lf-app"
     static_configs:
-      - targets: ['lf-app-1:8080', 'lf-app-2:8080', 'lf-app-3:8080']
+      - targets: ["lf-app-1:8080", "lf-app-2:8080", "lf-app-3:8080"]
     metric_relabel_configs:
       - action: keep
         source_labels: [__name__]
-        regex: '(demo_|http_).*'
+        regex: "(demo_|http_).*"
 
-  - job_name: 'lf-app-instrumented'
+  - job_name: "lf-app-instrumented"
     static_configs:
-      - targets: ['lf-app-instrumented-go:12345', 'lf-app-instrumented-python:12345']
+      - targets:
+          ["lf-app-instrumented-go:12345", "lf-app-instrumented-python:12345"]
 
-  - job_name: 'node'
+  - job_name: "node"
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ["node-exporter:9100"]
 
-  - job_name: 'cadvisor'
+  - job_name: "cadvisor"
     static_configs:
-      - targets: ['cadvisor:8080']
+      - targets: ["cadvisor:8080"]
 
-  - job_name: 'mysql'
+  - job_name: "mysql"
 
     params:
       auth_module: [client]
 
     static_configs:
-      - targets: ['mysql:3306']
+      - targets: ["mysql:3306"]
 
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
       - source_labels: [__param_target]
         target_label: instance
-      - target_label: __address__
+      - target_label:
+          __address__
           # The mysqld_exporter host:port
         replacement: mysql-exporter:9104
 
-  - job_name: 'postgres'
-    
+  - job_name: "postgres"
+
     static_configs:
       - targets:
-        - psql:5432
+          - psql:5432
 
     metrics_path: /probe
     params:
@@ -69,21 +71,44 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: psql-exporter:9187 
+        replacement: psql-exporter:9187
 
-  - job_name: 'cpu-exporter'
+  - job_name: "cpu-exporter"
     static_configs:
-      - targets: ['cpu-exporter:8000']
-  
-  - job_name: 'consul-sd-lfapp'
+      - targets: ["cpu-exporter:8000"]
+
+  - job_name: "consul-sd-lfapp"
     consul_sd_configs:
-      - server: 'consul:8500'
+      - server: "consul:8500"
     relabel_configs:
       - action: keep
         source_labels: [__meta_consul_service]
         regex: lf-app
 
-  - job_name: 'file-sd-config'
+  - job_name: "file-sd-config"
     file_sd_configs:
       - files:
-        - 'targets.yml'
+          - "targets.yml"
+
+  - job_name: "blackbox"
+    metrics_path: /probe
+    params:
+      module:
+        - http_2xx # Look for an HTTP 200 response
+
+    static_configs:
+      - targets:
+          # Targets to probe through the Blackbox Exporter
+          - "http://prometheus.io"
+          - "https://prometheus.io"
+          - "http://example.com:8080"
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+
+      - source_labels: [__param_target]
+        target_label: instance
+
+      - target_label: __address__
+        replacement: bb-exporter:9115 # Blackbox Exporter address

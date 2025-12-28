@@ -181,3 +181,17 @@ services:
       - "8013:8600"  # DNS (optional)
     restart: unless-stopped
     profiles: ["consul"]
+
+  blackbox-exporter:
+    image: docker.io/prom/blackbox-exporter:v0.26.0
+    container_name: blackbox-exporter
+    hostname: bb-exporter
+    ports:
+      - "8017:9115"
+    volumes:
+      - ./blackbox.yml:/config/blackbox.yml
+    command:
+      - "--config.file=/config/blackbox.yml"
+    restart: unless-stopped
+    profiles:
+      - "blackbox"
