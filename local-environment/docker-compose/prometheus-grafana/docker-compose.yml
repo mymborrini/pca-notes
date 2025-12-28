@@ -195,3 +195,13 @@ services:
     restart: unless-stopped
     profiles:
       - "blackbox"
+
+  pushgateway:
+    image: docker.io/prom/pushgateway:v1.11.0
+    container_name: pushgateway
+    hostname: pushgateway
+    ports:
+      - "8018:9091"
+    restart: unless-stopped
+    profiles:
+      - obs

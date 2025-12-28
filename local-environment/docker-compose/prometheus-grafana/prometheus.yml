@@ -112,3 +112,8 @@ scrape_configs:
 
       - target_label: __address__
         replacement: bb-exporter:9115 # Blackbox Exporter address
+
+  - job_name: "pushgateway"
+    honor_labels: true
+    static_configs:
+      - targets: ["pushgateway:9091"]
