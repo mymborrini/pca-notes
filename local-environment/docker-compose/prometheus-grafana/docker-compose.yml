@@ -205,3 +205,28 @@ services:
     restart: unless-stopped
     profiles:
       - obs
+
+  alert-receiver:
+    profiles:
+      - alerting
+    container_name: webhook-receiver
+    hostname: rcvr
+    build:
+      context: ./../../../receiver
+      dockerfile: Dockerfile
+    expose:
+      - 9595
+  alertmanager:
+    image: docker.io/prom/alertmanager:v0.28.1
+    profiles:
+      - alerting
+    container_name: alertmanager
+    hostname: alertmanager
+    ports:
+      - "8019:9093"
+    volumes:
+      - ./alertmanager.yml:/config/alertmanager.yml:ro
+    command:
+      - "--config.file=/config/alertmanager.yml"
+      - "--cluster.listen-address="
+      - "--log.level=debug"
