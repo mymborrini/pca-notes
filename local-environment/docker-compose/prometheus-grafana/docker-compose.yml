@@ -5,6 +5,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./targets.yml:/etc/prometheus/targets.yml
+      - ./alerting_rules.yml:/etc/prometheus/alerting_rules.yml
     ports:
       - "9090:9090"
     profiles: ["obs"]
@@ -209,6 +210,7 @@ services:
   alert-receiver:
     profiles:
       - alerting
+      - alerting-ha
     container_name: webhook-receiver
     hostname: rcvr
     build:
@@ -230,3 +232,33 @@ services:
       - "--config.file=/config/alertmanager.yml"
       - "--cluster.listen-address="
       - "--log.level=debug"
+  
+  am-one:
+    image: docker.io/prom/alertmanager:v0.28.1
+    container_name: am-one
+    hostname: am-one
+    profiles:
+      - alerting-ha
+    ports:
+      - "8019:9093"
+    volumes:
+      - ./alertmanager.yml:/config/alertmanager.yml:ro
+    command:
+      - "--config.file=/config/alertmanager.yml"
+      - "--cluster.listen-address=0.0.0.0:19093"
+      - "--cluster.peer=am-two:29093"
+
+  am-two:
+    image: docker.io/prom/alertmanager:v0.28.1
+    container_name: am-two
+    hostname: am-two
+    profiles:
+      - alerting-ha
+    ports:
+      - "8020:9093"
+    volumes:
+      - ./alertmanager.yml:/config/alertmanager.yml:ro
+    command:
+      - "--config.file=/config/alertmanager.yml"
+      - "--cluster.listen-address=0.0.0.0:29093"
+      - "--cluster.peer=am-one:19093"

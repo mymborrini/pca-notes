@@ -139,3 +139,105 @@ This disables the cluster port that Alertmanager listens on for peer gossip noti
 ### Configuring Alerting Rules
 
 Let's say you wanted to alert on HTTP paths that have a 5xx error rate percentage larger than 0.5%. You can try graphing the following expression to see that some paths actually sometimes have a higher error rate than 0.5%:
+
+```promql
+sum by(path,instance,job) (rate(demo_api_request_duration_seconds_count{job="lf-app", status=~"5.."}[1m])) / sum by(instance,job, path) (rate(demo_api_request_duration_seconds_count{job="lf-app"}[1m])) * 100
+```
+
+Configure prometheus to load alerting rules for another file add the following section to the prometheus configuration
+
+```yml
+rule_files:
+  - alerting_rules.yml
+```
+
+Create the file alerting_rules.yml with the following content
+
+```yml
+groups:
+  - name: lf-service-alerts
+    rules:
+      - alert: Many5xxErrors
+        expr: |
+          sum by (path, instance, job) (
+            rate(demo_api_request_duration_seconds_count{status=~"5..", job="lf-app"}[1m])
+          )
+          /
+          sum by (path, instance, job) (
+            rate(demo_api_request_duration_seconds_count{job="lf-app"}[1m])
+          )
+          * 100 > 0.5
+
+        for: 30s
+
+        labels:
+          severity: critical
+
+        annotations:
+          description: "The 5xx error rate for path {{ $labels.path }} on {{ $labels.instance }} is {{ $value }}%."
+```
+
+This example alerting rule instructs Prometheus to send alerts for any instance and path label combinations that have an error rate of more than 0.5% for more than 30 seconds. Note that this for duration is quite short, in order to quickly produce visible results. In real alerting rules, a more common value would be 5 minutes (for: 5m).
+
+This rule will also attach an extra severity="critical" label to any generated alerts. This extra label could be used to route alerts to a pager or other critical notification mechanism via the Alertmanager routing configuration.
+
+Finally, a human-readable description annotation is sent along with each alert, which you could choose to include in notification templates on the Alertmanager side.
+
+To tell Prometheus to send alerts to your Alertmanager, configure its address statically in the alerting section of the ~/prometheus/prometheus.yml configuration file (note that you could also use service discovery here).
+
+```yml
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+```
+
+As you can see now, there is a alert configured in prometheus which fires an alert to the alertmanager (you can see it in the alert manager ui), and you can see the webhook-receiver takes the alert and print the message
+
+### Setting Up Alertmanager in HA mode
+
+The docker compose should be refactor like this
+
+```yaml
+am-one:
+  image: docker.io/prom/alertmanager:v0.28.1
+  container_name: am-one
+  hostname: am-one
+  profiles:
+    - alerting-ha
+  ports:
+    - "8019:9093"
+  volumes:
+    - ./alertmanager.yml:/config/alertmanager.yml:ro
+  command:
+    - "--config.file=/config/alertmanager.yml"
+    - "--cluster.listen-address=0.0.0.0:19093"
+    - "--cluster.peer=am-two:29093"
+
+am-two:
+  image: docker.io/prom/alertmanager:v0.28.1
+  container_name: am-two
+  hostname: am-two
+  profiles:
+    - alerting-ha
+  ports:
+    - "8020:9093"
+  volumes:
+    - ./alertmanager.yml:/config/alertmanager.yml:ro
+  command:
+    - "--config.file=/config/alertmanager.yml"
+    - "--cluster.listen-address=0.0.0.0:29093"
+    - "--cluster.peer=am-one:19093"
+```
+
+And in prometheus.yml
+
+```yaml
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - am-one:9093
+            - am-two:9093
+```

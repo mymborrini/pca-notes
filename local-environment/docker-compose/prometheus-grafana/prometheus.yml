@@ -117,3 +117,14 @@ scrape_configs:
     honor_labels: true
     static_configs:
       - targets: ["pushgateway:9091"]
+
+rule_files:
+  - alerting_rules.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - am-one:9093
+            - am-two:9093
+            # - alertmanager:9093

@@ -1,0 +1,21 @@
+groups:
+  - name: lf-service-alerts
+    rules:
+      - alert: Many5xxErrors
+        expr: |
+          sum by (path, instance, job) (
+            rate(demo_api_request_duration_seconds_count{status=~"5..", job="lf-app"}[1m])
+          )
+          /
+          sum by (path, instance, job) (
+            rate(demo_api_request_duration_seconds_count{job="lf-app"}[1m])
+          )
+          * 100 > 0.5
+
+        for: 30s
+
+        labels:
+          severity: critical
+
+        annotations:
+          description: "The 5xx error rate for path {{ $labels.path }} on {{ $labels.instance }} is {{ $value }}%."
