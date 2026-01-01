@@ -10,6 +10,42 @@ services:
     ports:
       - "9090:9090"
     profiles: ["obs"]
+  
+  prometheus-a:
+    profiles:
+      - obs-fed
+    ports:
+      - "9091:9090"
+    container_name: prom-a
+    hostname: prom-a
+    image: prom/prometheus:v2.37.0
+    volumes:
+      - ./../../../prom-federated/prom-cluster-a.yml:/etc/prometheus/prometheus.yml
+      - ./../../../prom-federated/recording-rules.yml:/etc/prometheus/recording-rules.yml
+
+  prometheus-b:
+      profiles:
+        - obs-fed
+      ports:
+        - "9092:9090"
+      container_name: prom-b
+      hostname: prom-b
+      image: prom/prometheus:v2.37.0
+      volumes:
+        - ./../../../prom-federated/prom-cluster-b.yml:/etc/prometheus/prometheus.yml
+        - ./../../../prom-federated/recording-rules.yml:/etc/prometheus/recording-rules.yml
+  
+  prometheus-g:
+      profiles:
+        - obs-fed
+      ports:
+        - "9093:9090"
+      container_name: prom-g
+      hostname: prom-g
+      image: prom/prometheus:v2.37.0
+      volumes:
+        - ./../../../prom-federated/prom-global.yml:/etc/prometheus/prometheus.yml
+
 
   grafana:
     image: grafana/grafana:9.0.0
@@ -71,7 +107,7 @@ services:
       dockerfile: Dockerfile
     ports:
      - "8005:12345"
-    profiles: ["apps", "lf"]
+    profiles: ["apps", "lf-inst"]
 
   lf-app-instrumented-python:
     container_name: lf-app-instrumented-python
@@ -80,7 +116,7 @@ services:
       dockerfile: Dockerfile
     ports:
      - "8006:12345"
-    profiles: ["apps", "lf"]
+    profiles: ["apps", "lf-inst"]
   
   mysql:
     image: mysql:8.0-bookworm

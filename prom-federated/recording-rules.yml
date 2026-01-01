@@ -1,0 +1,8 @@
+groups:
+  - name: demo-service
+    rules:
+      - record: job:demo_api_request_duration_seconds_count:rate5m
+        expr: |
+          sum by (job) (
+            rate(demo_api_request_duration_seconds_count[5m])
+          )
