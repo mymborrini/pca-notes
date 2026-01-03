@@ -299,3 +299,124 @@ services:
       - "--config.file=/config/alertmanager.yml"
       - "--cluster.listen-address=0.0.0.0:29093"
       - "--cluster.peer=am-one:19093"
+  
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.67
+    container_name: seaweedfs
+    hostname: seaweedfs
+    profiles:
+      - cortex
+    command:
+      - server
+      - -s3
+      - -s3.config=/workspace/seaweedfs-config.json
+    ports:
+      - "8333:8333"
+    volumes:
+      - ./cortex-config/seaweedfs-config.json:/workspace/seaweedfs-config.json:ro
+      - ./cortex-config/seaweedfs-init.sh:/seaweedfs-init.sh:ro
+    healthcheck:
+      test: wget -qO- http://127.0.0.1:8333/status
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  cortex:
+    image: quay.io/cortexproject/cortex:v1.20.1
+    container_name: cortex
+    hostname: cortex
+    profiles:
+      - cortex
+    command:
+      - -config.file=/config/cortex-config.yaml
+    volumes:
+      - ./cortex-config/cortex-config.yaml:/config/cortex-config.yaml:ro
+    ports:
+      - "9009:9009"
+    healthcheck:
+      test: wget -qO- http://127.0.0.1:9009/ready
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
+
+  prometheus-thanos:
+    image: docker.io/prom/prometheus:v3.2.1
+    container_name: prometheus
+    hostname: prometheus
+    profiles:
+      - thanos
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./thanos-config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./thanos-config/prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.min-block-duration=2h"
+      - "--storage.tsdb.max-block-duration=2h"
+  minio-thanos:
+    image: docker.io/minio/minio:RELEASE.2025-04-08T15-41-24Z
+    container_name: minio
+    hostname: minio
+    profiles:
+      - thanos
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web console
+    volumes:
+      - ./thanos-config/minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio-thanos-init:
+    image: docker.io/minio/mc
+    container_name: minio-thanos-init
+    profiles:
+      - thanos
+    depends_on:
+      minio-thanos:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      echo 'Configuring MinIO client...' &&
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      echo 'Creating bucket: thanos' &&
+      mc mb local/thanos || echo 'Bucket already exists' &&
+      echo 'MinIO initialization completed'
+      "
+    restart: "no"
+  
+  thanos-sidecar:
+    image: docker.io/thanosio/thanos:v0.38.0
+    container_name: thanos-sidecar
+    hostname: thanos-sidecar
+    profiles:
+      - thanos
+    user: "65534:65534" # run as nobody/nogroup
+    volumes:
+      - ./thanos-config/bucket.yml:/config/bucket.yml
+      - ./thanos-config/prometheus-data:/prometheus
+    command:
+      - sidecar
+      - --tsdb.path=/prometheus/data
+      - --objstore.config-file=/config/bucket.yml
+      - --prometheus.url=http://prometheus:9090
+    restart: unless-stopped
+
+  thanos-query:
+    image: docker.io/thanosio/thanos:v0.38.0
+    container_name: thanos-query
+    hostname: thanos-query
+    profiles:
+      - thanos
+    ports:
+      - "10902:10902"   # Thanos Query UI / HTTP
+    command:
+      - query
+      - --endpoint=thanos-sidecar:10901
+    restart: unless-stopped

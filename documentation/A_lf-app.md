@@ -1,6 +1,5 @@
 # Lf-App
 
-
 The lf-app is necessary to make experience with prometheus.
 
 ## Download lf-app
@@ -20,3 +19,12 @@ Then go into lf-app/instrumentation-excercise/python and change the Dockerfile r
     4th line: COPY ./server-instrumented.py .
     6th line: CMD ["python","server-instrumented.py"]
 
+# Cortex
+
+To download cortex
+
+    git clone --depth=1 https://github.com/cortexproject/cortex.git
+
+And to work with it using docker compose
+
+    cd ./cortex/docs/getting-started

@@ -1,5 +1,7 @@
 global:
   scrape_interval: 15s
+  external_labels:
+    prometheus: main
 
 scrape_configs:
   - job_name: "prometheus"
@@ -129,3 +131,45 @@ alerting:
             - am-one:9093
             - am-two:9093
             # - alertmanager:9093
+
+remote_read:
+  - url: http://cortex:9009/api/prom/api/v1/read
+    headers:
+      X-Scope-OrgID: "cortex"
+
+  - url: http://cortex:9009/api/prom/api/v1/read
+    headers:
+      X-Scope-OrgID: "tenant-a"
+
+  - url: http://cortex:9009/api/prom/api/v1/read
+    headers:
+      X-Scope-OrgID: "tenant-b"
+
+  - url: http://cortex:9009/api/prom/api/v1/read
+    headers:
+      X-Scope-OrgID: "tenant-c"
+
+  - url: http://cortex:9009/api/prom/api/v1/read
+    headers:
+      X-Scope-OrgID: "tenant-d"
+
+remote_write:
+  - url: http://cortex:9009/api/v1/push
+    headers:
+      X-Scope-OrgID: "cortex"
+
+  - url: http://cortex:9009/api/v1/push
+    headers:
+      X-Scope-OrgID: "tenant-a"
+
+  - url: http://cortex:9009/api/v1/push
+    headers:
+      X-Scope-OrgID: "tenant-b"
+
+  - url: http://cortex:9009/api/v1/push
+    headers:
+      X-Scope-OrgID: "tenant-c"
+
+  - url: http://cortex:9009/api/v1/push
+    headers:
+      X-Scope-OrgID: "tenant-d"

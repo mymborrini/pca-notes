@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+  external_labels:
+    prometheus: main
+
+scrape_configs:
+  - job_name: "lf-app"
+    static_configs:
+      - targets: ["lf-app-1:8080", "lf-app-2:8080", "lf-app-3:8080"]
+    metric_relabel_configs:
+      - action: keep
+        source_labels: [__name__]
+        regex: "(demo_|http_).*"
