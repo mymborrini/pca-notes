@@ -1,7 +1,5 @@
 global:
   scrape_interval: 15s
-  external_labels:
-    prometheus: main
 
 scrape_configs:
   - job_name: "prometheus"
