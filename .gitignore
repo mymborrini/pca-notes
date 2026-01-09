@@ -8,3 +8,5 @@
 cortex/
 
 local-environment/docker-compose/prometheus-grafana/thanos-config/*-data
+
+preparation/labs
