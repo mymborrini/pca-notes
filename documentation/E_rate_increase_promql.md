@@ -218,3 +218,176 @@ rather than relying on raw endpoints.
 - Counter resets are automatically handled
 - `increase()` is equivalent to `rate() × time_range`
 - Per-second units are preferred for alerting and composition
+
+
+# Why Aggregations Must Be Applied to Time-Normalized Counter Values in PromQL
+
+In Prometheus, counter metrics represent cumulative values that continuously increase over time.
+Examples include the total number of HTTP requests, processed messages, or completed jobs.
+
+For observability purposes, aggregations must be applied to values that are normalized per unit of time (such as requests per second), rather than to raw cumulative counter values.
+Failing to do so leads to misleading results that depend on process uptime rather than current system behavior.
+
+---
+
+## 1. The Nature of Counter Metrics
+
+A counter:
+- only increases
+- may reset when the process restarts
+- represents a total accumulated since process start
+
+The absolute value of a counter does not describe the current load or activity of a system.
+Instead, it reflects historical accumulation, which makes direct aggregation problematic.
+
+---
+
+## 2. A Concrete Example: HTTP Request Counters
+
+Consider a service exposing the following metric:
+
+http_requests_total{instance="a"}
+http_requests_total{instance="b"}
+
+Observed values over one minute:
+
+Time t0:
+- instance a = 1,000
+- instance b = 10
+
+Time t1:
+- instance a = 1,100
+- instance b = 1,010
+
+During this minute:
+- instance a handled 100 requests
+- instance b handled 1,000 requests
+
+---
+
+## 3. Incorrect Approach: Aggregating Raw Counters
+
+If we aggregate the raw counters:
+
+sum(http_requests_total)
+
+At time t1, the result is:
+
+1,100 + 1,010 = 2,110
+
+This value is misleading because:
+- instance a may have been running for days
+- instance b may have just restarted
+- the result depends on uptime, not on current traffic
+- counter resets cause sudden drops that break graph continuity
+
+This aggregation provides no meaningful insight into the current request rate of the service.
+
+---
+
+## 4. Correct Approach: Normalize First, Aggregate Second
+
+### Step 1: Normalize the counter using rate()
+
+rate(http_requests_total[1m])
+
+Results:
+- instance a = 100 / 60 ≈ 1.66 requests per second
+- instance b = 1000 / 60 ≈ 16.66 requests per second
+
+At this point, the values are:
+- independent of uptime
+- comparable across instances
+- resilient to restarts
+
+### Step 2: Aggregate the normalized values
+
+sum(rate(http_requests_total[1m]))
+
+Result:
+- 1.66 + 16.66 = 18.32 requests per second
+
+This represents the actual load handled by the service.
+
+---
+
+## 5. Why the Order Matters
+
+Applying aggregation before normalization produces incorrect semantics.
+
+Incorrect order:
+rate(sum(http_requests_total)[1m])
+
+Problems:
+- mixes counters with different lifetimes
+- obscures counter resets
+- violates the counter model
+- produces misleading results
+
+Correct order:
+sum(rate(http_requests_total[1m]))
+
+Principle:
+Counters must be made comparable before they are aggregated.
+
+---
+
+## 6. Scaling Example: Horizontal Replicas
+
+Assume:
+- 10 pods
+- each pod handles 10 requests per second
+
+After one hour, each pod’s counter is approximately 36,000.
+
+Raw aggregation:
+sum(http_requests_total) = 360,000
+
+This value:
+- is not time-based
+- cannot be compared across time ranges
+- cannot be used for alerting or capacity planning
+
+Normalized aggregation:
+sum(rate(http_requests_total[5m])) = 100 requests per second
+
+This value:
+- represents current traffic
+- is stable over time
+- is suitable for dashboards, alerts, and SLOs
+
+---
+
+## 7. Impact on Alerting
+
+Incorrect alert condition:
+Alert if sum(http_requests_total) > 1,000,000
+
+This alert will eventually fire regardless of system health.
+
+Correct alert condition:
+Alert if sum(rate(http_requests_total[5m])) > 500
+
+This alert reflects real-time load and meaningful system behavior.
+
+---
+
+## 8. Key Principle for PromQL
+
+Aggregations must be applied to time-normalized values, not to raw counters.
+
+Or equivalently:
+
+Counter metrics must be converted into rates before aggregation, because aggregating cumulative values produces results that depend on uptime rather than current system behavior.
+
+---
+
+## 9. Mental Rule of Thumb
+
+Counter metrics:
+rate → aggregate
+
+Gauge metrics:
+aggregate → optional derivation
+
+Following this rule ensures correct semantics, stable graphs, and reliable alerting.
